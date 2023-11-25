@@ -1,7 +1,13 @@
+//struct user_heap_info
+//{
+//	uint32 address;
+//	uint32 size;
+//};
 
-uint32 user_heap_pages[(USER_HEAP_MAX - USER_HEAP_START) / PAGE_SIZE] = {0};
+
 //struct user_heap_info alloced_pages[((USER_HEAP_MAX - USER_HEAP_START) / PAGE_SIZE)];
 //int idx = 0;
+uint32 user_heap_pages[(USER_HEAP_MAX - USER_HEAP_START) / PAGE_SIZE] = {0};
 void* malloc(uint32 size)
 {
 	//==============================================================
@@ -15,7 +21,7 @@ void* malloc(uint32 size)
 	//return NULL;
 	//Use sys_isUHeapPlacementStrategyFIRSTFIT() and	sys_isUHeapPlacementStrategyBESTFIT()
 	//to check the current strategy
-	if(size<=DYN_ALLOC_MAX_SIZE){
+	if(size<=DYN_ALLOC_MAX_BLOCK_SIZE){
 		return alloc_block_FF(size);
 	}
 	    uint32 user_Available_Pages = (USER_HEAP_MAX - USER_HEAP_START) / PAGE_SIZE;
@@ -113,3 +119,4 @@ void free(void* virtual_address)
 		}
 
 }
+
