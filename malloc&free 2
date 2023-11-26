@@ -1,0 +1,116 @@
+void* malloc(uint32 size)
+{
+	cprintf("Enter malloc\n");
+	//==============================================================
+	//DON'T CHANGE THIS CODE========================================
+	InitializeUHeap();
+	if (size == 0) return NULL ;
+	//==============================================================
+	//TODO: [PROJECT'23.MS2 - #09] [2] USER HEAP - malloc() [User Side]
+	// Write your code here, remove the panic and write your code
+	//panic("malloc() is not implemented yet...!!");
+	//return NULL;
+	//Use sys_isUHeapPlacementStrategyFIRSTFIT() and	sys_isUHeapPlacementStrategyBESTFIT()
+	//to check the current strategy
+	cprintf("malloc: program enters the function\n");
+	if(size<=DYN_ALLOC_MAX_BLOCK_SIZE){
+		return alloc_block_FF(size);
+	}
+	cprintf("Print 1\n");
+	uint32 limit=(uint32)sys_get_hard_limit_user();
+	uint32 hard_limit= limit + PAGE_SIZE;
+	uint32 user_Available_Pages = ((USER_HEAP_MAX - hard_limit) / PAGE_SIZE);
+	size = ROUNDUP(size, PAGE_SIZE);
+	uint32 requiredPages = (size / PAGE_SIZE);
+	uint32 start_of_first_fit_block = 0;
+	uint32 startIndex = (hard_limit - USER_HEAP_START)/PAGE_SIZE;
+	uint32 pageCounter = 0;
+	cprintf("Print 2\n");
+	    if (requiredPages <= user_Available_Pages) {
+	    	cprintf("Print 3\n");
+	        for (uint32 i = startIndex; i < NUM_OF_UHEAP_PAGES; i++) {
+	            if (user_heap_pages_arr[i] == 0)
+	            {
+	                pageCounter++;
+	                if (pageCounter == 1) {
+	                	start_of_first_fit_block = USER_HEAP_START + (i * PAGE_SIZE);//changed line
+
+	                }
+	            }
+	            else {
+	                pageCounter = 0;
+	            }
+
+	            if (pageCounter == requiredPages) {
+	                break;
+	            }
+	        }
+
+			if (pageCounter!=requiredPages)
+			{
+				cprintf("Malloc: Not enough consecutive free pages\n");
+				return NULL;
+			}
+			cprintf("Print 4\n");
+		sys_allocate_user_mem(start_of_first_fit_block, size);
+		cprintf("Print 5\n");
+		uint32 address=start_of_first_fit_block;
+		for (uint32 i = 0; i < requiredPages; i++)
+		{
+			user_heap_pages_arr[((address - USER_HEAP_START) / PAGE_SIZE )] = requiredPages;
+			address += PAGE_SIZE;
+		}
+		cprintf("Print 6\n");
+		return (void*)start_of_first_fit_block;
+
+	}
+	else
+	{
+		cprintf("Malloc: no enough pages\n");
+		return NULL;
+	}
+
+}
+
+
+//=================================
+//=================================
+// [3] FREE SPACE FROM USER HEAP:
+//=================================
+void free(void* virtual_address)
+{
+	//TODO: [PROJECT'23.MS2 - #11] [2] USER HEAP - free() [User Side]
+	// Write your code here, remove the panic and write your code
+	//panic("free() is not implemented yet...!!");
+	uint32 va = (uint32)virtual_address;
+	uint32 limit=(uint32)sys_get_hard_limit_user();
+	uint32 hard_limit= limit+PAGE_SIZE;
+	if(va>=USER_HEAP_START && va<=hard_limit){
+		free_block(virtual_address);
+		return;
+	}
+
+	uint32 page_address = ROUNDDOWN(va, PAGE_SIZE);
+	uint32 startIndex=(page_address-USER_HEAP_START)/PAGE_SIZE;
+
+			if (user_heap_pages_arr[startIndex]!=0)
+			{
+				uint32 num_pages = user_heap_pages_arr[startIndex];
+
+
+				for (uint32 j = 0; j < num_pages; j++)
+				{
+					user_heap_pages_arr[j] = 0;
+				}
+
+				sys_free_user_mem(va, num_pages * PAGE_SIZE);
+
+
+//				alloced_pages[i] = alloced_pages[idx - 1];
+//				idx--;
+
+				return;
+
+		}
+
+}
