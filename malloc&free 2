@@ -1,3 +1,48 @@
+#include <inc/lib.h>
+//==================================================================================//
+//============================== GIVEN FUNCTIONS ===================================//
+//==================================================================================//
+
+uint32 user_heap_pages_arr[(USER_HEAP_MAX-USER_HEAP_START)/PAGE_SIZE] = {0};
+
+int FirstTimeFlag = 1;
+void InitializeUHeap()
+{
+	if(FirstTimeFlag)
+	{
+#if UHP_USE_BUDDY
+		initialize_buddy();
+		cprintf("BUDDY SYSTEM IS INITIALIZED\n");
+#endif
+		FirstTimeFlag = 0;
+	}
+}
+
+//==================================================================================//
+//============================ REQUIRED FUNCTIONS ==================================//
+//==================================================================================//
+
+//=============================================
+// [1] CHANGE THE BREAK LIMIT OF THE USER HEAP:
+//=============================================
+/*2023*/
+void* sbrk(int increment)
+{
+	return (void*) sys_sbrk(increment);
+}
+
+//=================================
+// [2] ALLOCATE SPACE IN USER HEAP:
+//=================================
+//struct user_heap_info
+//{
+//	uint32 address;
+//	uint32 size;
+//};
+
+
+//struct user_heap_info alloced_pages[((USER_HEAP_MAX - USER_HEAP_START) / PAGE_SIZE)];
+//int idx = 0;
 void* malloc(uint32 size)
 {
 	cprintf("Enter malloc\n");
@@ -17,8 +62,8 @@ void* malloc(uint32 size)
 		return alloc_block_FF(size);
 	}
 	cprintf("Print 1\n");
-	uint32 limit=(uint32)sys_get_hard_limit_user();
-	uint32 hard_limit= limit + PAGE_SIZE;
+	uint32 limit= (uint32)sys_get_hard_limit_user();
+	uint32 hard_limit= limit+PAGE_SIZE;
 	uint32 user_Available_Pages = ((USER_HEAP_MAX - hard_limit) / PAGE_SIZE);
 	size = ROUNDUP(size, PAGE_SIZE);
 	uint32 requiredPages = (size / PAGE_SIZE);
@@ -26,15 +71,14 @@ void* malloc(uint32 size)
 	uint32 startIndex = (hard_limit - USER_HEAP_START)/PAGE_SIZE;
 	uint32 pageCounter = 0;
 	cprintf("Print 2\n");
-	    if (requiredPages <= user_Available_Pages) {
+	    if (requiredPages < user_Available_Pages) {
 	    	cprintf("Print 3\n");
-	        for (uint32 i = startIndex; i < NUM_OF_UHEAP_PAGES; i++) {
+	        for (uint32 i = startIndex; i < user_Available_Pages; i++) {
 	            if (user_heap_pages_arr[i] == 0)
 	            {
 	                pageCounter++;
 	                if (pageCounter == 1) {
 	                	start_of_first_fit_block = USER_HEAP_START + (i * PAGE_SIZE);//changed line
-
 	                }
 	            }
 	            else {
