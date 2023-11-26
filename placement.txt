@@ -1,30 +1,36 @@
 if(wsSize < (curenv->page_WS_max_size))
-	{
-		//cprintf("PLACEMENT=========================WS Size = %d\n", wsSize );
-		//TODO: [PROJECT'23.MS2 - #15] [3] PAGE FAULT HANDLER - Placement
-		// Write your code here, remove the panic and write your code
-		//panic("page_fault_handler().PLACEMENT is not implemented yet...!!");
+					{
+						//cprintf("PLACEMENT=========================WS Size = %d\n", wsSize );
+						//TODO: [PROJECT'23.MS2 - #15] [3] PAGE FAULT HANDLER - Placement
+						// Write your code here, remove the panic and write your code
+						//panic("page_fault_handler().PLACEMENT is not implemented yet...!!");
 
-		//refer to the project presentation and documentation for details
-		 struct FrameInfo *ptr_frameInfo = NULL ;
-		 int alloc = allocate_frame(&ptr_frameInfo);
-		 if(alloc == 0){  //!= E_NO_MEM
-		 	map_frame(curenv->env_page_directory ,ptr_frameInfo , fault_va,(PERM_PRESENT | PERM_USER | PERM_WRITEABLE));
-		 	alloc = pf_read_env_page(curenv,(void *)fault_va);
-		 	if (alloc == E_PAGE_NOT_EXIST_IN_PF){
-		 	 // CHECK if it is a stack or heap page
+						//refer to the project presentation and documentation for details
+						 struct FrameInfo *ptr_frameInfo = NULL ;
+						 int alloc = allocate_frame(&ptr_frameInfo);
+						 if(alloc == 0){  //!= E_NO_MEM
+						 	map_frame(curenv->env_page_directory ,ptr_frameInfo , fault_va,(PERM_PRESENT | PERM_USER | PERM_WRITEABLE));
+						 	alloc = pf_read_env_page(curenv,(void *)fault_va);
+						 	if (alloc == E_PAGE_NOT_EXIST_IN_PF){
+						 	 // CHECK if it is a stack or heap page
 
-		 		if ((fault_va < USTACKTOP && fault_va >= USTACKBOTTOM) || (fault_va < USER_HEAP_MAX  && fault_va >= USER_HEAP_START)){
-		 			pf_add_empty_env_page(curenv,fault_va,0);
-		 		}else{
-		 			//panic("invaild access %x",fault_va);
-		 		    sched_kill_env(curenv->env_id);
-		 		}
+						 		if ((fault_va < USTACKTOP && fault_va >= USTACKBOTTOM) || (fault_va < USER_HEAP_MAX  && fault_va >= USER_HEAP_START)){
+						 			//pf_add_empty_env_page(curenv,fault_va,0);
+						 		}else{
+						 			//panic("invaild access %x",fault_va);
+						 		    sched_kill_env(curenv->env_id);
+						 		}
 
-		 }
+						 }
 
-		 	struct WorkingSetElement* ws_new_ele = env_page_ws_list_create_element( curenv, fault_va);
-		 	curenv->page_last_WS_index++ ;
-		 	curenv->page_last_WS_index = curenv->page_last_WS_index %  curenv->page_WS_max_size ;
-		 }
-	}
+						 	struct WorkingSetElement* ws_new_ele = env_page_ws_list_create_element( curenv, fault_va);
+						 	LIST_INSERT_TAIL(&curenv->page_WS_list,ws_new_ele);
+						 	uint32 size=LIST_SIZE(&curenv->page_WS_list);
+						    if(curenv->page_WS_max_size == size){
+						    	curenv->page_last_WS_element=LIST_FIRST(&curenv->page_WS_list);
+						    }
+						    else{
+						    	curenv->page_last_WS_element=NULL;
+						    }
+						 }
+					}
