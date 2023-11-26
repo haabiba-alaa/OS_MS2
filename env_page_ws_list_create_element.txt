@@ -3,19 +3,12 @@ inline struct WorkingSetElement* env_page_ws_list_create_element(struct Env* e, 
 	//TODO: [PROJECT'23.MS2 - #14] [3] PAGE FAULT HANDLER - Create a new working set element
 	// Write your code here, remove the panic and write your code
 	//panic("env_page_ws_list_create_element() is not implemented yet...!!");
-	  struct WorkingSetElement* new_element = (struct WorkingSetElement*) kmalloc(sizeof(struct WorkingSetElement));
+	struct WorkingSetElement* new_element = (struct WorkingSetElement*) kmalloc(sizeof(struct WorkingSetElement));
+		  if (new_element!=NULL)
+		  {
+			 new_element->virtual_address = virtual_address;
+			 return new_element;
+		  }
 
-	    if (new_element == NULL) {
-	        panic("Failed to allocate memory for WorkingSetElement");
-	    }
-
-	    // Initialize the element with the given virtual address
-	    new_element->virtual_address = virtual_address;
-
-	    // Set the previous and next pointers to NULL
-	    new_element->prev_next_info.le_prev = NULL;
-	    new_element->prev_next_info.le_next = NULL;
-
-	    // Return the pointer to the created object
-	    return new_element;
+		    return NULL;
 }
