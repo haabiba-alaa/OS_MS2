@@ -45,7 +45,6 @@ void* sbrk(int increment)
 //int idx = 0;
 void* malloc(uint32 size)
 {
-	cprintf("Enter malloc\n");
 	//==============================================================
 	//DON'T CHANGE THIS CODE========================================
 	InitializeUHeap();
@@ -57,11 +56,9 @@ void* malloc(uint32 size)
 	//return NULL;
 	//Use sys_isUHeapPlacementStrategyFIRSTFIT() and	sys_isUHeapPlacementStrategyBESTFIT()
 	//to check the current strategy
-	cprintf("malloc: program enters the function\n");
 	if(size<=DYN_ALLOC_MAX_BLOCK_SIZE){
 		return alloc_block_FF(size);
 	}
-	cprintf("Print 1\n");
 	uint32 limit= (uint32)sys_get_hard_limit_user();
 	uint32 hard_limit= limit + PAGE_SIZE;
 	uint32 user_Available_Pages = ((USER_HEAP_MAX - hard_limit) / PAGE_SIZE);
@@ -71,9 +68,8 @@ void* malloc(uint32 size)
 	uint32 startIndex = (hard_limit - USER_HEAP_START)/PAGE_SIZE;
 	uint32 pageCounter = 0;
 
-	cprintf("Print 2\n");
+
 	    if (requiredPages <= user_Available_Pages && sys_isUHeapPlacementStrategyFIRSTFIT()) {
-	    	cprintf("Print 3\n");
 	        for (uint32 i = startIndex; i < userHeap_NumPages; i++) {
 	            if (user_heap_pages_arr[i] == 0)
 	            {
@@ -93,26 +89,20 @@ void* malloc(uint32 size)
 
 			if (pageCounter!=requiredPages)
 			{
-				cprintf("Malloc: Not enough consecutive free pages\n");
 				return NULL;
 			}
-			cprintf("Print 4\n");
 		sys_allocate_user_mem(start_of_first_fit_block, size);
-		cprintf("Print 5\n");
 		uint32 address=start_of_first_fit_block;
 		for (uint32 i = 0; i < requiredPages; i++)
 		{
 			user_heap_pages_arr[((address - USER_HEAP_START) / PAGE_SIZE )] = requiredPages;
 			address += PAGE_SIZE;
 		}
-		cprintf("malloc: actual address %x , expected adress : %x\n",start_of_first_fit_block, hard_limit);
-		cprintf("malloc: difference %d\n",(hard_limit-start_of_first_fit_block)/PAGE_SIZE);
 		return (void*)start_of_first_fit_block;
 
 	}
 	else
 	{
-		cprintf("Malloc: no enough pages\n");
 		return NULL;
 	}
 
