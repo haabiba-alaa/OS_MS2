@@ -25,7 +25,6 @@ void* sys_sbrk(int increment) {
      */
 
     struct Env* env = curenv; // the current running Environment to adjust its break limit
-    cprintf("sysSBrk: program enters the function\n");
     if (increment < 0) {
         increment = ROUNDDOWN(increment, PAGE_SIZE);
     } else if (increment > 0) {
@@ -41,7 +40,6 @@ void* sys_sbrk(int increment) {
     uint32 limit= (uint32)sys_get_hard_limit_user();
     uint32 hard_limit= limit+PAGE_SIZE;
     if (new_break > hard_limit) {
-    	cprintf("sysSBrk: program out the function\n");
         return (void*)-1;
     }
 
@@ -57,7 +55,6 @@ void* sys_sbrk(int increment) {
         	allocate_user_mem(curenv,current_break,numPages*PAGE_SIZE);
             current_break = (current_break + PAGE_SIZE);
         }
-        cprintf("sysSBrk: program out the function\n");
         return (void*)Prev_break;
     }
     else if (increment < 0) {
@@ -65,10 +62,8 @@ void* sys_sbrk(int increment) {
                 unmap_frame(ptr_page_directory, (uint32)current_break);
                 current_break = (current_break - PAGE_SIZE);
             }
-            cprintf("sysSBrk: program out the function\n");
             return (void*)new_break;
         } else {
-        	cprintf("sysSBrk: program out the function\n");
             return (void*)current_break;
         }
     return NULL;
