@@ -1,0 +1,62 @@
+void env_free(struct Env *e)
+{
+	/*REMOVE THIS LINE BEFORE START CODING*/
+	//return;
+	/**************************************/
+
+	//TODO: [PROJECT'23.MS3 - BONUS] EXIT ENV: env_free
+	// your code is here, remove the panic and write your code
+	{
+		//panic("env_free() is not implemented yet...!!");
+
+		//requirement 1 and requirement 2.
+		struct WorkingSetElement *ws_elem = LIST_FIRST(&(e->page_WS_list));
+		while (ws_elem != NULL) {
+			LIST_REMOVE(&e->page_WS_list, ws_elem);
+		    unmap_frame(e->env_page_directory, ws_elem->virtual_address);
+		    ws_elem = LIST_NEXT(ws_elem);
+		}
+		 LIST_INIT(&(e->page_WS_list));
+       //-----------------
+		 // requirement 3
+		uint32 nBytes = sizeof(struct WorkingSetElement) * e->page_WS_max_size;
+		unsigned int tsva = (unsigned int) e->__uptr_pws;
+		for (; tsva < ((unsigned int) (e->__uptr_pws) + nBytes); tsva += PTSIZE) {
+		    uint32 *uws_table;
+			get_page_table(e->env_page_directory,tsva, &uws_table);
+			for (int i = 0; i < NPTENTRIES; i++) {
+				if (uws_table[i] & PERM_PRESENT) {
+					uint32 pt_pa = uws_table[i] & ~0xFFF;
+				    free_frame(get_frame_info(e->env_page_directory, tsva + i * PAGE_SIZE, NULL));
+				    uws_table[i] = 0;
+				}
+	        }
+
+			pd_clear_page_dir_entry(e->env_page_directory, tsva);
+		}
+     //--------------------
+		// Requirement 4
+	    unsigned int *dir_table;
+		get_page_table(e->env_page_directory, 0, &dir_table);
+		for (int i = 0; i < NPTENTRIES; i++) {
+			if (dir_table[i] & PERM_PRESENT) {
+				uint32 pt_pa = dir_table[i] & ~0xFFF;
+				free_frame(get_frame_info(e->env_page_directory, i * PAGE_SIZE, NULL));
+				dir_table[i] = 0;
+			}
+		}
+
+
+	}
+
+	// [9] remove this program from the page file
+	/*(ALREADY DONE for you)*/
+	pf_free_env(e); /*(ALREADY DONE for you)*/ // (removes all of the program pages from the page file)
+	/*========================*/
+
+	// [10] free the environment (return it back to the free environment list)
+	/*(ALREADY DONE for you)*/
+	free_environment(e); /*(ALREADY DONE for you)*/ // (frees the environment (returns it back to the free environment list))
+	/*========================*/
+
+}
